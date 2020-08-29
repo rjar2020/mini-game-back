@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+
+while getopts ":bv" opt; do
+  case ${opt} in
+    b )
+      rm mini-game-backend.jar
+      echo "Executing ./gradlew clean"
+      ./gradlew clean >/dev/null
+      echo "Executing ./gradlew build"
+      ./gradlew build >/dev/null
+      mv build/libs/mini-game-back-1.0-SNAPSHOT.jar ./mini-game-backend.jar
+      ;;
+    v )
+      rm mini-game-backend.jar
+      echo "Executing ./gradlew clean - verbose"
+      ./gradlew clean
+      echo "Executing ./gradlew build - verbose"
+      ./gradlew build
+      mv build/libs/mini-game-back-1.0-SNAPSHOT.jar ./mini-game-backend.jar
+      ;;
+    \? ) echo "Usage: cmd [-b] for building [-v] for build with gradle output"
+      ;;
+  esac
+done
+
+chmod +x  mini-game-backend.jar
+java -jar mini-game-backend.jar
