@@ -4,6 +4,7 @@ import com.minigame.api.util.Pair;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,7 +18,7 @@ public final class HttpHandlerUtil {
         return id > 0 && id < Integer.MAX_VALUE;
     }
 
-    public static void sendHttpResponse(HttpExchange exchange, Pair<Integer, String> httpCodeAndBody) throws IOException {
+    public static void sendHttpResponseAndEndExchange(HttpExchange exchange, Pair<Integer, String> httpCodeAndBody) throws IOException {
         exchange.sendResponseHeaders(
                 httpCodeAndBody.getLeft(),
                 httpCodeAndBody.getRight().getBytes().length);
@@ -27,12 +28,15 @@ public final class HttpHandlerUtil {
         exchange.close();
     }
 
-    public static int getLevelId(HttpExchange exchange) {
+    public static Optional<Integer> getValidLevelId(HttpExchange exchange) {
         try {
-            return Integer.parseInt(exchange.getRequestURI().toASCIIString().split("/")[1]);
+            var levelId = Integer.parseInt(exchange.getRequestURI().toASCIIString().split("/")[1]);
+            if(isValidIntId(levelId)) {
+                return Optional.of(levelId);
+            }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "UserId cannot be processed, service will return 404");
         }
-        return -1;
+        return  Optional.empty();
     }
 }

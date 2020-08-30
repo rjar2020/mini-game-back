@@ -11,6 +11,7 @@ import java.util.UUID;
 public class LoginService {
 
     private final LoginStore loginStore;
+    private static final long TEN_MINUTES = 10;
 
     public LoginService(LoginStore loginStore) {
         this.loginStore = loginStore;
@@ -27,6 +28,6 @@ public class LoginService {
     }
 
     private boolean isActiveSession(Instant sessionCreationTime) {
-        return Duration.between(sessionCreationTime, Instant.now()).toMinutes() < 10;
+        return Duration.between(sessionCreationTime, Instant.now()).toMinutes() < TEN_MINUTES;
     }
 }

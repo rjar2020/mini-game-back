@@ -23,27 +23,22 @@ public class UserScoreHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        Pair<Integer, String> httpCodeAndBody;
-        var levelId = HttpHandlerUtil.getLevelId(exchange);
-        if (HttpHandlerUtil.isValidIntId(levelId)) {
-            httpCodeAndBody = processUserScoreRequest(exchange, levelId);
-        } else {
-            httpCodeAndBody = new Pair<>(400, "Invalid levelId. Most be a positive integer of 31 bits");
-        }
-        HttpHandlerUtil.sendHttpResponse(exchange, httpCodeAndBody);
+        HttpHandlerUtil.sendHttpResponseAndEndExchange(
+                exchange,
+                HttpHandlerUtil.getValidLevelId(exchange)
+                        .map(integer -> processUserScoreRequest(exchange, integer))
+                        .orElse(new Pair<>(400, "Invalid levelId. Most be a positive integer of 31 bits"))
+        );
     }
 
-    private Pair<Integer, String> processUserScoreRequest(HttpExchange exchange, int levelId) throws IOException {
+    private Pair<Integer, String> processUserScoreRequest(HttpExchange exchange, int levelId)  {
         var sessionId = UUID.fromString(exchange.getRequestURI().getQuery().split("=")[1]);
-        var userId = loginService.getUserIfActiveSession(sessionId);
-        if(userId.isPresent()) {
-            return saveNewScore(exchange, levelId, userId.get());
-        } else {
-            return new Pair<>(400, "Bad Request. Invalid session.");
-        }
+        return loginService.getUserIfActiveSession(sessionId)
+                .map(integer -> saveNewScore(exchange, levelId, integer))
+                .orElseGet(() -> new Pair<>(400, "Bad Request. Invalid session."));
     }
 
-    private Pair<Integer, String> saveNewScore(HttpExchange exchange, int levelId, Integer userId) throws IOException {
+    private Pair<Integer, String> saveNewScore(HttpExchange exchange, int levelId, Integer userId) {
         try {
             var score = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
             levelScoreService.saveScore(userId, levelId, Integer.parseInt(score));

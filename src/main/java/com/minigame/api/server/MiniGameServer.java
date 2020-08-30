@@ -15,14 +15,15 @@ public final class MiniGameServer {
 
     private static final Logger LOGGER = Logger.getLogger(MiniGameServer.class.getName());
     public static final MiniGameServer SERVER = new MiniGameServer();
+    public static final int SERVER_PORT = 8000;
     private HttpServer httpServer;
     private final AtomicBoolean started = new AtomicBoolean(false);
 
     private MiniGameServer() {
         httpServer = null;
         try {
-            var serverPort = 8000;
-            httpServer = HttpServer.create(new InetSocketAddress(serverPort), 0);
+
+            httpServer = HttpServer.create(new InetSocketAddress(SERVER_PORT), 0);
         } catch (IOException e) {
             LOGGER.log( Level.SEVERE, "The mini-gama server wasn't initialized. Exception: ", e);
         }

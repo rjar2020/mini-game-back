@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
+import java.util.function.Function;
 
 public class LevelHighScoreHandler implements HttpHandler {
 
@@ -18,15 +19,17 @@ public class LevelHighScoreHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        Pair<Integer, String> httpCodeAndBody;
-        var levelId = HttpHandlerUtil.getLevelId(exchange);
-        if (HttpHandlerUtil.isValidIntId(levelId) ) {
-            httpCodeAndBody = levelScoreService.getHighestScoresForLevel(levelId)
-                    .map(scoreResponse -> new Pair<>(200, scoreResponse))
-                    .orElse(new Pair<>(404, ""));
-        } else {
-            httpCodeAndBody = new Pair<>(400, "Invalid levelId. Most be a positive integer of 31 bits");
-        }
-        HttpHandlerUtil.sendHttpResponse(exchange, httpCodeAndBody);
+        HttpHandlerUtil.sendHttpResponseAndEndExchange(
+                exchange,
+                HttpHandlerUtil.getValidLevelId(exchange)
+                        .map(getHighScoreForLevelId())
+                        .orElse(new Pair<>(400, "Invalid levelId. Most be a positive integer of 31 bits"))
+        );
+    }
+
+    private Function<Integer, Pair<Integer, String>> getHighScoreForLevelId() {
+        return levelId -> levelScoreService.getHighestScoresForLevel(levelId)
+                .map(scoreResponse -> new Pair<>(200, scoreResponse))
+                .orElse(new Pair<>(404, ""));
     }
 }
