@@ -1,9 +1,9 @@
 # MiniGame Backend
 
-##Prerequisites
+## Prerequisites
 Java 11 installed
 
-##Running the backend
+## Running the backend
 To execute the mini game backend, ***from the project root*** use:
 
 - For running the pre-packaged java jar
@@ -25,7 +25,7 @@ java -jar mini-game-backend.jar
 
 Use ***Control + c*** to stop the server after any of the bellow options.
 
-##From the IDE
+## From the IDE
 - Import the source as a Gradle project
 
 - com.minigame.MiniGameBootstrap can be run/debug 
