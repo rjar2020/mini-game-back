@@ -16,4 +16,8 @@ public class LoginService {
     public Optional<UUID> getSessionKeyForUser(int id) {
         return loginStore.createOrRetrieveSessionKey(id);
     }
+
+    public Optional<Integer> getUserIfActiveSession(UUID sessionKey) {
+        return loginStore.getUserIfActiveSession(sessionKey);
+    }
 }

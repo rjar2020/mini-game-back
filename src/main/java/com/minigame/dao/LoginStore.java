@@ -21,16 +21,24 @@ public class LoginStore {
     }
 
     public Optional<UUID> createOrRetrieveSessionKey(int userId) {
-        Optional<Map.Entry<UUID, Pair<Integer, Instant>>> activeSessionForUser = getExistingSession(userId);
+        var activeSessionForUser = getExistingSession(userId);
         if (activeSessionForUser.isPresent()){
             if (isExpiredSession(activeSessionForUser.get().getKey())) {
                 SESSION_STORE.remove(activeSessionForUser.get().getKey(), activeSessionForUser.get().getValue());
-                SESSION_STORE.put(UUID.randomUUID(), new Pair<>(userId, Instant.now()));
+                SESSION_STORE.putIfAbsent(UUID.randomUUID(), new Pair<>(userId, Instant.now()));
             }
         } else {
-            SESSION_STORE.put(UUID.randomUUID(), new Pair<>(userId, Instant.now()));
+            SESSION_STORE.putIfAbsent(UUID.randomUUID(), new Pair<>(userId, Instant.now()));
         }
         return getExistingSession(userId).map(Map.Entry::getKey);
+    }
+
+    public Optional<Integer> getUserIfActiveSession(UUID sessionKey) {
+        if(!isExpiredSession(sessionKey)) {
+            return Optional.ofNullable(SESSION_STORE.get(sessionKey))
+                    .map(Pair::getLeft);
+        }
+        return Optional.empty();
     }
 
     private boolean isExpiredSession(UUID activeSessionForUser) {
@@ -44,6 +52,4 @@ public class LoginStore {
                 .stream()
                 .filter((entry -> userId == entry.getValue().getLeft())).findFirst();
     }
-
-
 }

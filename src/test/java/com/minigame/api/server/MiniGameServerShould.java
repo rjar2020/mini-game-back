@@ -95,15 +95,28 @@ class MiniGameServerShould {
 
     @Test
     void handleUserScoreRequestWhenValidPathLevelIdAndSessionKey() {
+        var userId = String.valueOf(Math.abs(new Random().nextInt()));
         var levelId = String.valueOf(Math.abs(new Random().nextInt()));
-        var sessionKey = UUID.randomUUID().toString();
+        var score = "1500";
+        final String[] sessionKey = new String[1];
+        getLoginAndAssertResponse(
+                userId,
+                httpResponse -> {
+                    assertEquals(200, httpResponse.statusCode(),
+                            "Successful call expected. userId="+userId);
+                    assertTrue(httpResponse.body().toString().matches(SESSION_KEY_PATTERN),
+                            "Successful call expected with sessionKey being UUID. sessionKey="+httpResponse.body().toString());
+                    sessionKey[0] = httpResponse.body().toString();
+                }
+        );
         postUserScoreAndAssertResponse(
                 levelId,
-                sessionKey,
+                sessionKey[0],
+                score,
                 httpResponse -> assertEquals(
                         200,
                         httpResponse.statusCode(),
-                        "Successful call expected. levelId="+levelId+". sessionKey="+sessionKey)
+                        "Successful call expected. levelId="+levelId+". sessionKey="+sessionKey + " Response: " + httpResponse.body().toString())
         );
     }
 
@@ -111,9 +124,11 @@ class MiniGameServerShould {
     void rejectPostUserScoreWhenWrongLevelIdFormat() {
         var levelId = "-" + Math.abs(new Random().nextInt());
         var sessionKey = UUID.randomUUID().toString();
+        var score = "1500";
         postUserScoreAndAssertResponse(
                 levelId,
                 sessionKey,
+                score,
                 httpResponse -> assertEquals(
                         400,
                         httpResponse.statusCode(),
@@ -123,6 +138,7 @@ class MiniGameServerShould {
         postUserScoreAndAssertResponse(
                 longLevelId,
                 sessionKey,
+                score,
                 httpResponse -> assertEquals(
                         400,
                         httpResponse.statusCode(),
@@ -134,13 +150,31 @@ class MiniGameServerShould {
     void rejectPostUserScoreWhenWrongSessionKeyFormat() {
         var levelId = String.valueOf(Math.abs(new Random().nextInt()));
         var sessionKey = UUID.randomUUID().toString().replace("-", "");
+        var score = "1500";
         postUserScoreAndAssertResponse(
                 levelId,
                 sessionKey,
+                score,
                 httpResponse -> assertEquals(
                         404,
                         httpResponse.statusCode(),
                         "Unsuccessful call expected for non UUID sessionKey levelId="+levelId+". sessionKey="+sessionKey)
+        );
+    }
+
+    @Test
+    void rejectPostUserScoreWhenInvalidOrExpiredSessionKey() {
+        var levelId = String.valueOf(Math.abs(new Random().nextInt()));
+        var sessionKey =  UUID.randomUUID().toString();
+        var score = "1500";
+        postUserScoreAndAssertResponse(
+                levelId,
+                sessionKey,
+                score,
+                httpResponse -> assertEquals(
+                        400,
+                        httpResponse.statusCode(),
+                        "Unsuccessful call expected for not authenticated user. levelId="+levelId+". sessionKey="+sessionKey)
         );
     }
 
@@ -196,12 +230,12 @@ class MiniGameServerShould {
                 .join();
     }
 
-    private void postUserScoreAndAssertResponse(String levelId, String sessionKey ,Consumer<HttpResponse<?>> httpResponseAssertions) {
+    private void postUserScoreAndAssertResponse(String levelId, String sessionKey, String score, Consumer<HttpResponse<?>> httpResponseAssertions) {
         var httpClient = HttpClient.newHttpClient();
         var httpRequest = HttpRequest.newBuilder()
                 .uri(URI.create(USER_SCORE_URI.replace("{levelId}", levelId).replace("{sessionKey}", sessionKey)))
                 .timeout(Duration.ofSeconds(3))
-                .POST(HttpRequest.BodyPublishers.noBody())
+                .POST(HttpRequest.BodyPublishers.ofString(score))
                 .build();
         httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
                 .thenAccept(httpResponseAssertions)
