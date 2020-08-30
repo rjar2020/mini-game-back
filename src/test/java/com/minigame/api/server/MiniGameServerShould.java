@@ -94,7 +94,7 @@ class MiniGameServerShould {
     }
 
     @Test
-    void handleUserScoreRequestWhenRightPathLevelIdAndSessionKey() {
+    void handleUserScoreRequestWhenValidPathLevelIdAndSessionKey() {
         var levelId = String.valueOf(Math.abs(new Random().nextInt()));
         var sessionKey = UUID.randomUUID().toString();
         postUserScoreAndAssertResponse(

@@ -5,7 +5,6 @@ import com.minigame.api.util.Pair;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LoginStore {
 
     private static final LoginStore LOGIN_STORE = new LoginStore();
-    private static final Map<Integer, Pair<UUID, Instant>> SESSION_STORE = new ConcurrentHashMap<>();
+    private static final Map<UUID, Pair<Integer, Instant>> SESSION_STORE = new ConcurrentHashMap<>();
 
     private LoginStore() { }
 
@@ -21,18 +20,29 @@ public class LoginStore {
         return LOGIN_STORE;
     }
 
-    public Optional<UUID> getSessionKey(int userId) {
-        Pair<UUID, Instant> activeSessionForUser = SESSION_STORE.get(userId);
-        if (Objects.isNull(activeSessionForUser) || isExpiredSession(activeSessionForUser)) {
-            SESSION_STORE.put(userId, new Pair<>(UUID.randomUUID(), Instant.now()));
+    public Optional<UUID> createOrRetrieveSessionKey(int userId) {
+        Optional<Map.Entry<UUID, Pair<Integer, Instant>>> activeSessionForUser = getExistingSession(userId);
+        if (activeSessionForUser.isPresent()){
+            if (isExpiredSession(activeSessionForUser.get().getKey())) {
+                SESSION_STORE.remove(activeSessionForUser.get().getKey(), activeSessionForUser.get().getValue());
+                SESSION_STORE.put(UUID.randomUUID(), new Pair<>(userId, Instant.now()));
+            }
         } else {
-            SESSION_STORE.putIfAbsent(userId, new Pair<>(UUID.randomUUID(), Instant.now()));
+            SESSION_STORE.put(UUID.randomUUID(), new Pair<>(userId, Instant.now()));
         }
-        return Optional.of(SESSION_STORE.get(userId).getLeft());
+        return getExistingSession(userId).map(Map.Entry::getKey);
     }
 
-    private boolean isExpiredSession(Pair<UUID, Instant> activeSessionForUser) {
-        return Duration.between(activeSessionForUser.getRight(), Instant.now()).toMinutes() > 10;
+    private boolean isExpiredSession(UUID activeSessionForUser) {
+        return Duration.between(
+                SESSION_STORE.getOrDefault(activeSessionForUser, new Pair<>(0, Instant.EPOCH)).getRight(),
+                Instant.now()).toMinutes() > 10;
+    }
+
+    private Optional<Map.Entry<UUID, Pair<Integer, Instant>>> getExistingSession(int userId) {
+        return SESSION_STORE.entrySet()
+                .stream()
+                .filter((entry -> userId == entry.getValue().getLeft())).findFirst();
     }
 
 
