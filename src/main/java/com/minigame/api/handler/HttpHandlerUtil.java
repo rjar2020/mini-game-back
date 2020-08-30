@@ -19,13 +19,16 @@ public final class HttpHandlerUtil {
     }
 
     public static void sendHttpResponseAndEndExchange(HttpExchange exchange, Pair<Integer, String> httpCodeAndBody) throws IOException {
-        exchange.sendResponseHeaders(
-                httpCodeAndBody.getLeft(),
-                httpCodeAndBody.getRight().getBytes().length);
-        var outputStream = exchange.getResponseBody();
-        outputStream.write(httpCodeAndBody.getRight().getBytes());
-        outputStream.flush();
-        exchange.close();
+        try {
+            exchange.sendResponseHeaders(
+                    httpCodeAndBody.getLeft(),
+                    httpCodeAndBody.getRight().getBytes().length);
+            var outputStream = exchange.getResponseBody();
+            outputStream.write(httpCodeAndBody.getRight().getBytes());
+            outputStream.flush();
+        } finally {
+            exchange.close();
+        }
     }
 
     public static Optional<Integer> getValidLevelId(HttpExchange exchange) {
