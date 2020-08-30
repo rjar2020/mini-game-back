@@ -1,5 +1,6 @@
 package com.minigame.api.handler;
 
+import com.minigame.api.util.Pair;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.IOException;
@@ -16,9 +17,12 @@ public final class HttpHandlerUtil {
         return id > 0 && id < Integer.MAX_VALUE;
     }
 
-    public static void sendHttpResponse(HttpExchange exchange, String respText) throws IOException {
+    public static void sendHttpResponse(HttpExchange exchange, Pair<Integer, String> httpCodeAndBody) throws IOException {
+        exchange.sendResponseHeaders(
+                httpCodeAndBody.getLeft(),
+                httpCodeAndBody.getRight().getBytes().length);
         var outputStream = exchange.getResponseBody();
-        outputStream.write(respText.getBytes());
+        outputStream.write(httpCodeAndBody.getRight().getBytes());
         outputStream.flush();
         exchange.close();
     }

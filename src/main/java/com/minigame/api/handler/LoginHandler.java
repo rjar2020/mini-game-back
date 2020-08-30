@@ -1,5 +1,7 @@
 package com.minigame.api.handler;
 
+import com.minigame.api.util.Pair;
+import com.minigame.service.LoginService;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
@@ -11,18 +13,28 @@ public class LoginHandler implements HttpHandler {
 
     public static final String PATH_REGEX = "/-?[0-9]*/login";
     private static final Logger LOGGER = Logger.getLogger(LoginHandler.class.getName());
+    private final LoginService loginService;
+
+    public LoginHandler(LoginService loginService) {
+        this.loginService = loginService;
+    }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        var respText = "OK login";
+        Pair<Integer, String> httpCodeAndBody;
         var userId = getUserId(exchange);
         if (HttpHandlerUtil.isValidIntId(userId) ) {
-            exchange.sendResponseHeaders(200, respText.getBytes().length);
+            httpCodeAndBody = createSessionKey(userId);
         } else {
-            respText = "Invalid userId. Most be a positive integer of 31 bits";
-            exchange.sendResponseHeaders(400, respText.getBytes().length);
+            httpCodeAndBody = new Pair<>(400, "Invalid userId. Most be a positive integer of 31 bits");
         }
-        HttpHandlerUtil.sendHttpResponse(exchange, respText);
+        HttpHandlerUtil.sendHttpResponse(exchange, httpCodeAndBody);
+    }
+
+    private Pair<Integer, String> createSessionKey(int userId) {
+        return loginService.getSessionKeyForUser(userId)
+                .map(key -> new Pair<>(200, key.toString()))
+                .orElse(new Pair<>(409, "Error creating a sessionKey"));
     }
 
     private int getUserId(HttpExchange exchange) {

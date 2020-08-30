@@ -1,5 +1,6 @@
 package com.minigame.api.handler;
 
+import com.minigame.api.util.Pair;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
@@ -11,14 +12,13 @@ public class LevelHighScoreHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        var respText = "Hello High Score!";
+        Pair<Integer, String> httpCodeAndBody;
         var levelId = HttpHandlerUtil.getLevelId(exchange);
         if (HttpHandlerUtil.isValidIntId(levelId) ) {
-            exchange.sendResponseHeaders(200, respText.getBytes().length);
+            httpCodeAndBody = new Pair<>(200, "Hello high score");
         } else {
-            respText = "Invalid levelId. Most be a positive integer of 31 bits";
-            exchange.sendResponseHeaders(400, respText.getBytes().length);
+            httpCodeAndBody = new Pair<>(400, "Invalid levelId. Most be a positive integer of 31 bits");
         }
-        HttpHandlerUtil.sendHttpResponse(exchange, respText);
+        HttpHandlerUtil.sendHttpResponse(exchange, httpCodeAndBody);
     }
 }

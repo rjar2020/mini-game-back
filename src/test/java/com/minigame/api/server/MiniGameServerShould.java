@@ -15,6 +15,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MiniGameServerShould {
@@ -23,6 +24,7 @@ class MiniGameServerShould {
     private static final String LOGIN_URI = LOCAL_HOST+"/{userId}/login";
     private static final String USER_SCORE_URI = LOCAL_HOST+"/{levelId}/score?sessionkey={sessionKey}";
     private static final String HIGH_SCORE_URI = LOCAL_HOST+"/{levelId}/highscorelist";
+    private static final String SESSION_KEY_PATTERN = "([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})";
 
     @BeforeAll
     void setUp() {
@@ -34,10 +36,40 @@ class MiniGameServerShould {
         var userId = String.valueOf(Math.abs(new Random().nextInt()));
         getLoginAndAssertResponse(
                 userId,
-                httpResponse -> assertEquals(
-                        200,
-                        httpResponse.statusCode(),
-                        "Successful call expected. userId="+userId)
+                httpResponse -> {
+                    assertEquals(200, httpResponse.statusCode(),
+                            "Successful call expected. userId="+userId);
+                    assertTrue(httpResponse.body().toString().matches(SESSION_KEY_PATTERN),
+                            "Successful call expected with sessionKey being UUID. sessionKey="+httpResponse.body().toString());
+                }
+        );
+    }
+
+    @Test
+    void returnSameSessionKeyForUserWhenActive() {
+        var userId = String.valueOf(Math.abs(new Random().nextInt()));
+        final String[] sessionKey = new String[1];
+        getLoginAndAssertResponse(
+                userId,
+                httpResponse -> {
+                    assertEquals(200, httpResponse.statusCode(),
+                            "Successful call expected. userId="+userId);
+                    assertTrue(httpResponse.body().toString().matches(SESSION_KEY_PATTERN),
+                            "Successful call expected with sessionKey being UUID. sessionKey="+httpResponse.body().toString());
+                    sessionKey[0] = httpResponse.body().toString();
+                }
+        );
+        getLoginAndAssertResponse(
+                userId,
+                httpResponse -> {
+                    assertEquals(200, httpResponse.statusCode(),
+                            "Successful call expected. userId="+userId);
+                    assertTrue(httpResponse.body().toString().matches(SESSION_KEY_PATTERN),
+                            "Successful call expected with sessionKey being UUID. sessionKey="+httpResponse.body().toString());
+                    sessionKey[0] = httpResponse.body().toString();
+                    assertEquals(sessionKey[0], httpResponse.body().toString(),
+                            "Active session key should be retrieved.");
+                }
         );
     }
 
