@@ -26,18 +26,30 @@ public class UserScoreHandler implements HttpHandler {
         Pair<Integer, String> httpCodeAndBody;
         var levelId = HttpHandlerUtil.getLevelId(exchange);
         if (HttpHandlerUtil.isValidIntId(levelId)) {
-            var sessionId = UUID.fromString(exchange.getRequestURI().getQuery().split("=")[1]);
-            var userId = loginService.getUserIfActiveSession(sessionId);
-            if(userId.isPresent()) {
-                var score = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8) ;
-                levelScoreService.saveScore(userId.get(), levelId, Integer.parseInt(score));
-                httpCodeAndBody = new Pair<>(200, "Hello user score");
-            } else {
-                httpCodeAndBody = new Pair<>(400, "Bad Request. Session/score invalid.");
-            }
+            httpCodeAndBody = processUserScoreRequest(exchange, levelId);
         } else {
             httpCodeAndBody = new Pair<>(400, "Invalid levelId. Most be a positive integer of 31 bits");
         }
         HttpHandlerUtil.sendHttpResponse(exchange, httpCodeAndBody);
+    }
+
+    private Pair<Integer, String> processUserScoreRequest(HttpExchange exchange, int levelId) throws IOException {
+        var sessionId = UUID.fromString(exchange.getRequestURI().getQuery().split("=")[1]);
+        var userId = loginService.getUserIfActiveSession(sessionId);
+        if(userId.isPresent()) {
+            return saveNewScore(exchange, levelId, userId.get());
+        } else {
+            return new Pair<>(400, "Bad Request. Invalid session.");
+        }
+    }
+
+    private Pair<Integer, String> saveNewScore(HttpExchange exchange, int levelId, Integer userId) throws IOException {
+        try {
+            var score = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+            levelScoreService.saveScore(userId, levelId, Integer.parseInt(score));
+            return new Pair<>(200, "Hello user score");
+        } catch (Exception e) {
+            return new Pair<>(400, "Bad Request. Invalid score.");
+        }
     }
 }

@@ -21,7 +21,7 @@ public class RequestHandler implements HttpHandler {
                     new LoginService(LoginStore.getInstance()),
                     new LevelScoreService(LevelStore.getInstance())).handle(exchange);
         } else if(uri.matches(LevelHighScoreHandler.PATH_REGEX) && "GET".equals(exchange.getRequestMethod())) {
-            new LevelHighScoreHandler().handle(exchange);
+            new LevelHighScoreHandler(new LevelScoreService(LevelStore.getInstance())).handle(exchange);
         } else {
             resourceNotFound(exchange);
         }

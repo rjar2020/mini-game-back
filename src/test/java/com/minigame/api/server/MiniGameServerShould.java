@@ -48,7 +48,7 @@ class MiniGameServerShould {
     @Test
     void returnSameSessionKeyForUserWhenActive() {
         var userId = String.valueOf(Math.abs(new Random().nextInt()));
-        final String[] sessionKey = new String[1];
+        var sessionKey = getLoginSessionKey(userId);
         getLoginAndAssertResponse(
                 userId,
                 httpResponse -> {
@@ -56,18 +56,7 @@ class MiniGameServerShould {
                             "Successful call expected. userId="+userId);
                     assertTrue(httpResponse.body().toString().matches(SESSION_KEY_PATTERN),
                             "Successful call expected with sessionKey being UUID. sessionKey="+httpResponse.body().toString());
-                    sessionKey[0] = httpResponse.body().toString();
-                }
-        );
-        getLoginAndAssertResponse(
-                userId,
-                httpResponse -> {
-                    assertEquals(200, httpResponse.statusCode(),
-                            "Successful call expected. userId="+userId);
-                    assertTrue(httpResponse.body().toString().matches(SESSION_KEY_PATTERN),
-                            "Successful call expected with sessionKey being UUID. sessionKey="+httpResponse.body().toString());
-                    sessionKey[0] = httpResponse.body().toString();
-                    assertEquals(sessionKey[0], httpResponse.body().toString(),
+                    assertEquals(sessionKey, httpResponse.body().toString(),
                             "Active session key should be retrieved.");
                 }
         );
@@ -98,20 +87,10 @@ class MiniGameServerShould {
         var userId = String.valueOf(Math.abs(new Random().nextInt()));
         var levelId = String.valueOf(Math.abs(new Random().nextInt()));
         var score = "1500";
-        final String[] sessionKey = new String[1];
-        getLoginAndAssertResponse(
-                userId,
-                httpResponse -> {
-                    assertEquals(200, httpResponse.statusCode(),
-                            "Successful call expected. userId="+userId);
-                    assertTrue(httpResponse.body().toString().matches(SESSION_KEY_PATTERN),
-                            "Successful call expected with sessionKey being UUID. sessionKey="+httpResponse.body().toString());
-                    sessionKey[0] = httpResponse.body().toString();
-                }
-        );
+        var sessionKey = getLoginSessionKey(userId);
         postUserScoreAndAssertResponse(
                 levelId,
-                sessionKey[0],
+                sessionKey,
                 score,
                 httpResponse -> assertEquals(
                         200,
@@ -181,12 +160,34 @@ class MiniGameServerShould {
     @Test
     void handleHighScoreRequestWhenRightPathAndLevelId() {
         var levelId = String.valueOf(Math.abs(new Random().nextInt()));
+        var userId = String.valueOf(Math.abs(new Random().nextInt()));
+        var sessionKey = getLoginSessionKey(userId);
+        var score = "1500";
+        postUserScore(levelId, sessionKey,score);
         getHighScoreAndAssertResponse(
                 levelId,
-                httpResponse -> assertEquals(
-                        200,
-                        httpResponse.statusCode(),
-                        "Successful call expected. levelId="+levelId)
+                httpResponse -> {
+                    assertEquals(200, httpResponse.statusCode(),
+                        "Successful call expected. levelId="+levelId);
+                    assertEquals(userId+"="+score, httpResponse.body().toString(),
+                            "Successful call expected. response: "+userId+"="+score);
+                }
+        );
+    }
+
+    @Test
+    void handleHighScoreRequestAndReturn404AndEmptyStringWhenNoScoreFoundForRequestedLevel() {
+        var levelId = String.valueOf(Math.abs(new Random().nextInt()));
+        var userId = String.valueOf(Math.abs(new Random().nextInt()));
+        var score = "1500";
+        getHighScoreAndAssertResponse(
+                levelId,
+                httpResponse -> {
+                    assertEquals(404, httpResponse.statusCode(),
+                            "Unsuccessful call expected for a level without scores. levelId="+levelId);
+                    assertEquals("", httpResponse.body().toString(),
+                            "Unsuccessful call expected for a level without scores. levelId="+levelId);
+                }
         );
     }
 
@@ -214,32 +215,55 @@ class MiniGameServerShould {
         getAndAssertResponse(URI.create(LOGIN_URI.replace("{userId}", userId)), httpResponseAssertions);
     }
 
+    private String getLoginSessionKey(String userId) {
+        return getAndReturnResponse(URI.create(LOGIN_URI.replace("{userId}", userId)));
+    }
+
     private void getHighScoreAndAssertResponse(String levelId, Consumer<HttpResponse<?>> httpResponseAssertions) {
         getAndAssertResponse(URI.create(HIGH_SCORE_URI.replace("{levelId}", levelId)), httpResponseAssertions);
     }
 
+    private String postUserScore(String levelId, String sessionKey, String score) {
+        return HttpClient.newHttpClient()
+                .sendAsync(createUserScoreRequest(levelId, sessionKey, score), HttpResponse.BodyHandlers.ofString())
+                .join()
+                .body();
+    }
+
     private void getAndAssertResponse(URI uri, Consumer<HttpResponse<?>> httpResponseAssertions) {
-        var httpClient = HttpClient.newHttpClient();
-        var httpRequest = HttpRequest.newBuilder()
-                .uri(uri)
-                .timeout(Duration.ofSeconds(3))
-                .GET()
-                .build();
-        httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
+        HttpClient.newHttpClient()
+                .sendAsync(createGetRequest(uri), HttpResponse.BodyHandlers.ofString())
                 .thenAccept(httpResponseAssertions)
                 .join();
     }
 
+    private String getAndReturnResponse(URI uri) {
+        return HttpClient.newHttpClient()
+                .sendAsync(createGetRequest(uri), HttpResponse.BodyHandlers.ofString())
+                .join().body();
+    }
+
+    private HttpRequest createGetRequest(URI uri) {
+        return HttpRequest.newBuilder()
+                .uri(uri)
+                .timeout(Duration.ofSeconds(3))
+                .GET()
+                .build();
+    }
+
     private void postUserScoreAndAssertResponse(String levelId, String sessionKey, String score, Consumer<HttpResponse<?>> httpResponseAssertions) {
-        var httpClient = HttpClient.newHttpClient();
-        var httpRequest = HttpRequest.newBuilder()
+        HttpClient.newHttpClient()
+                .sendAsync(createUserScoreRequest(levelId, sessionKey, score), HttpResponse.BodyHandlers.ofString())
+                .thenAccept(httpResponseAssertions)
+                .join();
+    }
+
+    private HttpRequest createUserScoreRequest(String levelId, String sessionKey, String score) {
+        return HttpRequest.newBuilder()
                 .uri(URI.create(USER_SCORE_URI.replace("{levelId}", levelId).replace("{sessionKey}", sessionKey)))
                 .timeout(Duration.ofSeconds(3))
                 .POST(HttpRequest.BodyPublishers.ofString(score))
                 .build();
-        httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
-                .thenAccept(httpResponseAssertions)
-                .join();
     }
 
     @AfterAll
