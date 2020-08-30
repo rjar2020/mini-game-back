@@ -162,6 +162,23 @@ class MiniGameServerShould {
         var levelId = String.valueOf(Math.abs(new Random().nextInt()));
         var userId = String.valueOf(Math.abs(new Random().nextInt()));
         var sessionKey = getLoginSessionKey(userId);
+        postUserScore(levelId, sessionKey,"800");
+        getHighScoreAndAssertResponse(
+                levelId,
+                httpResponse -> {
+                    assertEquals(200, httpResponse.statusCode(),
+                        "Successful call expected. levelId="+levelId);
+                    assertEquals(userId+"=800", httpResponse.body().toString(),
+                            "Successful call expected. response: "+userId+"=800");
+                }
+        );
+    }
+
+    @Test
+    void handleHighScoreRequestKeepingOnlyHighestScoreForUserId() {
+        var levelId = String.valueOf(Math.abs(new Random().nextInt()));
+        var userId = String.valueOf(Math.abs(new Random().nextInt()));
+        var sessionKey = getLoginSessionKey(userId);
         postUserScore(levelId, sessionKey,"1500");
         postUserScore(levelId, sessionKey,"2000");
         postUserScore(levelId, sessionKey,"800");
@@ -169,9 +186,9 @@ class MiniGameServerShould {
                 levelId,
                 httpResponse -> {
                     assertEquals(200, httpResponse.statusCode(),
-                        "Successful call expected. levelId="+levelId);
-                    assertEquals(userId+"=2000,"+userId+"=1500,"+userId+"=800", httpResponse.body().toString(),
-                            "Successful call expected. response: "+userId+"=2000,"+userId+"=1500,"+userId+"=800");
+                            "Successful call expected. levelId="+levelId);
+                    assertEquals(userId+"=2000", httpResponse.body().toString(),
+                            "Successful call expected. response: "+userId+"=2000");
                 }
         );
     }

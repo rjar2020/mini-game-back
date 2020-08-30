@@ -25,11 +25,35 @@ public class LevelStore {
             MAX_SCORE_BY_LEVEL.putIfAbsent(
                     level,
                     new TreeSet<>((p1, p2) -> p2.getRight().compareTo(p1.getRight())));
+            MAX_SCORE_BY_LEVEL.get(level).add(new Pair<>(userId, score));
+        } else {
+            addScoreWithoutUserDuplication(userId, level, score);
         }
-        MAX_SCORE_BY_LEVEL.get(level).add(new Pair<>(userId, score));
     }
 
     public Optional<Set<Pair<Integer, Integer>>> retrieveScoresForLevel(int level) {
         return Optional.ofNullable(MAX_SCORE_BY_LEVEL.get(level));
     }
+
+    private void addScoreWithoutUserDuplication(int userId, int level, int score) {
+        if (userAlreadyHaveRecordedScore(userId, level)) {
+            var formerUserMaxScore = MAX_SCORE_BY_LEVEL.get(level)
+                    .stream()
+                    .filter(oldScore -> userId == oldScore.getLeft() && score > oldScore.getRight())
+                    .findAny();
+            if(formerUserMaxScore.isPresent()) {
+                MAX_SCORE_BY_LEVEL.get(level).remove(formerUserMaxScore.get());
+                MAX_SCORE_BY_LEVEL.get(level).add(new Pair<>(userId, score));
+            }
+        } else {
+            MAX_SCORE_BY_LEVEL.get(level).add(new Pair<>(userId, score));
+        }
+    }
+
+    private boolean userAlreadyHaveRecordedScore(int userId, int level) {
+        return MAX_SCORE_BY_LEVEL.get(level)
+                .stream()
+                .anyMatch(oldScore -> userId == oldScore.getLeft());
+    }
+
 }
