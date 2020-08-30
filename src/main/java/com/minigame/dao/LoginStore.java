@@ -33,12 +33,8 @@ public class LoginStore {
         return getExistingSession(userId).map(Map.Entry::getKey);
     }
 
-    public Optional<Integer> getUserIfActiveSession(UUID sessionKey) {
-        if(!isExpiredSession(sessionKey)) {
-            return Optional.ofNullable(SESSION_STORE.get(sessionKey))
-                    .map(Pair::getLeft);
-        }
-        return Optional.empty();
+    public Optional<Pair<Integer, Instant>> getSessionDetails(UUID sessionKey) {
+            return Optional.ofNullable(SESSION_STORE.get(sessionKey));
     }
 
     private boolean isExpiredSession(UUID activeSessionForUser) {
