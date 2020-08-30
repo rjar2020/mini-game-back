@@ -162,15 +162,39 @@ class MiniGameServerShould {
         var levelId = String.valueOf(Math.abs(new Random().nextInt()));
         var userId = String.valueOf(Math.abs(new Random().nextInt()));
         var sessionKey = getLoginSessionKey(userId);
-        var score = "1500";
-        postUserScore(levelId, sessionKey,score);
+        postUserScore(levelId, sessionKey,"1500");
+        postUserScore(levelId, sessionKey,"2000");
+        postUserScore(levelId, sessionKey,"800");
         getHighScoreAndAssertResponse(
                 levelId,
                 httpResponse -> {
                     assertEquals(200, httpResponse.statusCode(),
                         "Successful call expected. levelId="+levelId);
-                    assertEquals(userId+"="+score, httpResponse.body().toString(),
-                            "Successful call expected. response: "+userId+"="+score);
+                    assertEquals(userId+"=2000,"+userId+"=1500,"+userId+"=800", httpResponse.body().toString(),
+                            "Successful call expected. response: "+userId+"=2000,"+userId+"=1500,"+userId+"=800");
+                }
+        );
+    }
+
+    @Test
+    void handleHighScoreRequestWhenMultipleUsersInLevelScoreBoard() {
+        var levelId = String.valueOf(Math.abs(new Random().nextInt()));
+        var userId = String.valueOf(Math.abs(new Random().nextInt()));
+        var userId2 = String.valueOf(Math.abs(new Random().nextInt()));
+        var userId3 = String.valueOf(Math.abs(new Random().nextInt()));
+        var sessionKey = getLoginSessionKey(userId);
+        var sessionKey2 = getLoginSessionKey(userId2);
+        var sessionKey3 = getLoginSessionKey(userId3);
+        postUserScore(levelId, sessionKey,"1500");
+        postUserScore(levelId, sessionKey2,"2000");
+        postUserScore(levelId, sessionKey3,"800");
+        getHighScoreAndAssertResponse(
+                levelId,
+                httpResponse -> {
+                    assertEquals(200, httpResponse.statusCode(),
+                            "Successful call expected. levelId="+levelId);
+                    assertEquals(userId2+"=2000,"+userId+"=1500,"+userId3+"=800", httpResponse.body().toString(),
+                            "Successful call expected. response: "+userId2+"=2000,"+userId+"=1500,"+userId3+"=800");
                 }
         );
     }

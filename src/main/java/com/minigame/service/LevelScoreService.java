@@ -20,9 +20,9 @@ public class LevelScoreService {
     public Optional<String> getHighestScoresForLevel(int levelId) {
         return levelStore.retrieveScoresForLevel(levelId)
                 .map(integerIntegerMap ->
-                        integerIntegerMap.entrySet()
+                        integerIntegerMap
                                 .stream()
-                                .map(entry -> entry.getValue() + "=" + entry.getKey())
+                                .map(entry -> entry.getLeft() + "=" + entry.getRight())
                                 .collect(Collectors.joining(",")));
     }
 }
