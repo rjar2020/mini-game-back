@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -35,17 +36,21 @@ public class SessionCleanUpServiceShould {
     @Test
     void deleteOldExpiredSessions() {
         var sessionKey = UUID.randomUUID();
+        var sessionKey2 = UUID.randomUUID();
+        var sessionKey3 = UUID.randomUUID();
         var sessionKeyList = new LinkedList<UUID>();
         sessionKeyList.add(sessionKey);
+        sessionKeyList.add(sessionKey2);
+        sessionKeyList.add(sessionKey3);
         when(loginStore.getOldestSession()).then(answer -> {
             if(Objects.nonNull(sessionKeyList.peekFirst())) {
                 return Optional.of(sessionKeyList.remove());
             }
             return Optional.empty();
         });
-        when(loginService.getUserIfActiveSession(sessionKey)).thenReturn(Optional.empty());
+        when(loginService.getUserIfActiveSession(any(UUID.class))).thenReturn(Optional.empty());
         sessionCleanUpService.cleanUpOldSessions();
-        verify(loginStore, times(1)).removeOldestSession(sessionKey);
+        verify(loginStore, times(3)).removeOldestSession(any(UUID.class));
     }
 
     @Test
