@@ -2,6 +2,7 @@ package com.minigame.dao;
 
 import com.minigame.api.util.Pair;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -13,6 +14,7 @@ public class LevelStore {
 
     private static final LevelStore LEVEL_STORE = new LevelStore();
     private static final Map<Integer, Set<Pair<Integer, Integer>>> MAX_SCORE_BY_LEVEL = new ConcurrentHashMap<>();
+    private static final Set<Integer> RECORDED_USERS_BY_LEVEL = new HashSet<>();
 
     private LevelStore() { }
 
@@ -29,6 +31,7 @@ public class LevelStore {
         } else {
             addScoreWithoutUserDuplication(userId, level, score);
         }
+        recordUserByLevel(userId, level);
     }
 
     public Optional<Set<Pair<Integer, Integer>>> retrieveScoresForLevel(int level) {
@@ -36,24 +39,29 @@ public class LevelStore {
     }
 
     private void addScoreWithoutUserDuplication(int userId, int level, int score) {
-        if (userAlreadyHaveRecordedScore(userId, level)) {
-            var formerUserMaxScore = MAX_SCORE_BY_LEVEL.get(level)
-                    .stream()
-                    .filter(oldScore -> userId == oldScore.getLeft() && score > oldScore.getRight())
-                    .findAny();
-            if(formerUserMaxScore.isPresent()) {
-                MAX_SCORE_BY_LEVEL.get(level).remove(formerUserMaxScore.get());
-                MAX_SCORE_BY_LEVEL.get(level).add(new Pair<>(userId, score));
-            }
+        if (isUserAlreadyRecordedInLevel(userId, level)) {
+            validateAndKeepMaxScoreForUser(userId, level, score);
         } else {
             MAX_SCORE_BY_LEVEL.get(level).add(new Pair<>(userId, score));
         }
     }
 
-    private boolean userAlreadyHaveRecordedScore(int userId, int level) {
-        return MAX_SCORE_BY_LEVEL.get(level)
+    private void validateAndKeepMaxScoreForUser(int userId, int level, int score) {
+        MAX_SCORE_BY_LEVEL.get(level)
                 .stream()
-                .anyMatch(oldScore -> userId == oldScore.getLeft());
+                .filter(oldScore -> userId == oldScore.getLeft() && score > oldScore.getRight())
+                .findAny().ifPresent(
+                        formerHighScore -> {
+                            MAX_SCORE_BY_LEVEL.get(level).remove(formerHighScore);
+                            MAX_SCORE_BY_LEVEL.get(level).add(new Pair<>(userId, score));
+                        });
     }
 
+    private void recordUserByLevel(int userId, int level) {
+        RECORDED_USERS_BY_LEVEL.add(new Pair<>(level, userId).hashCode());
+    }
+
+    private boolean isUserAlreadyRecordedInLevel(int userId, int level) {
+        return RECORDED_USERS_BY_LEVEL.contains(new Pair<>(level, userId).hashCode());
+    }
 }

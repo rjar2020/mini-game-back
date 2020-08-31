@@ -6,7 +6,6 @@ import com.minigame.service.LoginService;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
@@ -22,7 +21,7 @@ public class UserScoreHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
+    public void handle(HttpExchange exchange) {
         HttpHandlerUtil.sendHttpResponseAndEndExchange(
                 exchange,
                 HttpHandlerUtil.getValidLevelId(exchange)

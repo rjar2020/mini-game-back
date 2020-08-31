@@ -18,7 +18,7 @@ public final class HttpHandlerUtil {
         return id > 0 && id < Integer.MAX_VALUE;
     }
 
-    public static void sendHttpResponseAndEndExchange(HttpExchange exchange, Pair<Integer, String> httpCodeAndBody) throws IOException {
+    public static void sendHttpResponseAndEndExchange(HttpExchange exchange, Pair<Integer, String> httpCodeAndBody) {
         try {
             exchange.sendResponseHeaders(
                     httpCodeAndBody.getLeft(),
@@ -26,6 +26,8 @@ public final class HttpHandlerUtil {
             var outputStream = exchange.getResponseBody();
             outputStream.write(httpCodeAndBody.getRight().getBytes());
             outputStream.flush();
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Unexpected exception -> ", e);
         } finally {
             exchange.close();
         }

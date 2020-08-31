@@ -5,7 +5,6 @@ import com.minigame.service.LevelScoreService;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-import java.io.IOException;
 import java.util.function.Function;
 
 public class LevelHighScoreHandler implements HttpHandler {
@@ -18,7 +17,7 @@ public class LevelHighScoreHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
+    public void handle(HttpExchange exchange) {
         HttpHandlerUtil.sendHttpResponseAndEndExchange(
                 exchange,
                 HttpHandlerUtil.getValidLevelId(exchange)

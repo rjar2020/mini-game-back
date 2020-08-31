@@ -1,5 +1,6 @@
 package com.minigame.api.handler;
 
+import com.minigame.api.util.Pair;
 import com.minigame.dao.LevelStore;
 import com.minigame.dao.LoginStore;
 import com.minigame.service.LevelScoreService;
@@ -7,32 +8,51 @@ import com.minigame.service.LoginService;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-import java.io.IOException;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class RequestHandler implements HttpHandler {
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
+    public void handle(HttpExchange exchange) {
         var uri = exchange.getRequestURI().toASCIIString();
-        if (uri.matches(LoginHandler.PATH_REGEX) && "GET".equals(exchange.getRequestMethod())){
-            new LoginHandler(new LoginService(LoginStore.getInstance())).handle(exchange);
-        } else if(uri.matches(UserScoreHandler.PATH_REGEX) && "POST".equals(exchange.getRequestMethod())) {
-            new UserScoreHandler(
-                    new LoginService(LoginStore.getInstance()),
-                    new LevelScoreService(LevelStore.getInstance())).handle(exchange);
-        } else if(uri.matches(LevelHighScoreHandler.PATH_REGEX) && "GET".equals(exchange.getRequestMethod())) {
-            new LevelHighScoreHandler(new LevelScoreService(LevelStore.getInstance())).handle(exchange);
+        var httpHandler = getHandlersMap().entrySet()
+                .stream()
+                .filter(isMatchingHandler(exchange, uri))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+        if(httpHandler.isEmpty()) {
+            HttpHandlerUtil.sendHttpResponseAndEndExchange(
+                    exchange,
+                    new Pair<>(404, "Resource not found")
+            );
         } else {
-            resourceNotFound(exchange);
+            httpHandler.forEach(handler -> handler.accept(exchange));
         }
     }
 
-    private void resourceNotFound(HttpExchange exchange) throws IOException {
-        var respText = "Resource not found";
-        exchange.sendResponseHeaders(404, respText.getBytes().length);
-        var outputStream = exchange.getResponseBody();
-        outputStream.write(respText.getBytes());
-        outputStream.flush();
-        exchange.close();
+    private Predicate<Map.Entry<Pair<String, String>, Consumer<HttpExchange>>> isMatchingHandler(HttpExchange exchange, String uri) {
+        return entry -> uri.matches(entry.getKey().getLeft()) && entry.getKey().getRight().equals(exchange.getRequestMethod());
     }
+
+    private Map<Pair<String, String>, Consumer<HttpExchange>> getHandlersMap() {
+        return Map.of(
+                new Pair<>(LoginHandler.PATH_REGEX, "GET"), loginHandlerProcessor,
+                new Pair<>(UserScoreHandler.PATH_REGEX, "POST"),  userScoreHandlerProcessor,
+                new Pair<>(LevelHighScoreHandler.PATH_REGEX,"GET") , levelHighScoreHandlerProcessor
+        );
+    }
+
+    private final Consumer<HttpExchange> loginHandlerProcessor =
+            exchange -> new LoginHandler(new LoginService(LoginStore.getInstance())).handle(exchange);
+
+    private final Consumer<HttpExchange> userScoreHandlerProcessor =
+            exchange ->  new UserScoreHandler(
+                    new LoginService(LoginStore.getInstance()),
+                    new LevelScoreService(LevelStore.getInstance())).handle(exchange);
+
+    private final Consumer<HttpExchange> levelHighScoreHandlerProcessor =
+            exchange ->   new LevelHighScoreHandler(new LevelScoreService(LevelStore.getInstance())).handle(exchange);
 }
