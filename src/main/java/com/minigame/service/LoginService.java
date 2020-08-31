@@ -1,6 +1,7 @@
 package com.minigame.service;
 
 import com.minigame.dao.LoginStore;
+import com.minigame.model.SessionAttributes;
 import com.minigame.model.util.Pair;
 
 import java.time.Duration;
@@ -11,7 +12,6 @@ import java.util.UUID;
 public class LoginService {
 
     private final LoginStore loginStore;
-    private static final long TEN_MINUTES = 10;
 
     public LoginService(LoginStore loginStore) {
         this.loginStore = loginStore;
@@ -28,6 +28,6 @@ public class LoginService {
     }
 
     private boolean isActiveSession(Instant sessionCreationTime) {
-        return Duration.between(sessionCreationTime, Instant.now()).toMinutes() < TEN_MINUTES;
+        return Duration.between(sessionCreationTime, Instant.now()).toMinutes() < SessionAttributes.TTL.getTime();
     }
 }

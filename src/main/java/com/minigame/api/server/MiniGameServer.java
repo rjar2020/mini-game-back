@@ -1,6 +1,9 @@
 package com.minigame.api.server;
 
 import com.minigame.api.handler.RequestHandler;
+import com.minigame.dao.LoginStore;
+import com.minigame.service.LoginService;
+import com.minigame.service.SessionCleanUpService;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
@@ -18,14 +21,17 @@ public final class MiniGameServer {
     public static final int SERVER_PORT = 8000;
     private HttpServer httpServer;
     private static final AtomicBoolean started = new AtomicBoolean(false);
+    private static final SessionCleanUpService SESSION_CLEAN_UP_SERVICE = new SessionCleanUpService(
+            LoginStore.getInstance(),
+            new LoginService(LoginStore.getInstance())
+    );
 
     private MiniGameServer() {
         httpServer = null;
         try {
-
             httpServer = HttpServer.create(new InetSocketAddress(SERVER_PORT), 0);
         } catch (IOException e) {
-            LOGGER.log( Level.SEVERE, "The mini-gama server wasn't initialized. Exception: ", e);
+            LOGGER.log(Level.SEVERE, "The mini-gama server wasn't initialized. Exception: ", e);
         }
     }
 
@@ -34,6 +40,7 @@ public final class MiniGameServer {
             httpServer.createContext("/", exchange -> new RequestHandler().handle(exchange));
             httpServer.setExecutor(Executors.newWorkStealingPool());
             httpServer.start();
+            SESSION_CLEAN_UP_SERVICE.ScheduleOldSessionsCleanUp();
         }
     }
 }
