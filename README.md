@@ -18,7 +18,7 @@ To execute the mini game backend, ***from the project root*** use:
 ```bash
 ./execute-me -v
 ```
-- If you want to run directly the jar:
+- If you want to run directly the pre-packaged java jar:
 ```bash
 java -jar mini-game-backend.jar
 ```
