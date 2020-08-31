@@ -6,19 +6,19 @@ Java 11 installed
 ## Running the backend
 To execute the mini game backend, ***from the project root*** use:
 
-- For running the pre-packaged java jar
+- For running the pre-packaged jar
 ```bash
 ./execute-me
 ```
-- For building and running a newly generated java jar
+- For building and running a newly generated jar
 ```bash
 ./execute-me -b
 ```
-- For building and running a newly generated java jar, with gradle output
+- For building and running a newly generated jar, with gradle output
 ```bash
 ./execute-me -v
 ```
-- If you want to run directly the pre-packaged java jar:
+- If you want to run directly the pre-packaged jar:
 ```bash
 java -jar mini-game-backend.jar
 ```
