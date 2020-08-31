@@ -1,6 +1,6 @@
 package com.minigame.dao;
 
-import com.minigame.api.util.Pair;
+import com.minigame.model.Pair;
 
 import java.util.HashSet;
 import java.util.Map;

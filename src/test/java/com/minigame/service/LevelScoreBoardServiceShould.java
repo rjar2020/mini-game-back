@@ -1,7 +1,7 @@
 package com.minigame.service;
 
-import com.minigame.api.util.Pair;
 import com.minigame.dao.LevelStore;
+import com.minigame.model.Pair;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

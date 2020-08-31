@@ -1,6 +1,6 @@
-package com.minigame.api.handler;
+package com.minigame.api.util;
 
-import com.minigame.api.util.Pair;
+import com.minigame.model.Pair;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.IOException;

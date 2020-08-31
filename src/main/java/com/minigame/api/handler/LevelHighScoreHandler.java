@@ -1,6 +1,7 @@
 package com.minigame.api.handler;
 
-import com.minigame.api.util.Pair;
+import com.minigame.api.util.HttpHandlerUtil;
+import com.minigame.model.Pair;
 import com.minigame.service.LevelScoreBoardService;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;

@@ -1,4 +1,4 @@
-package com.minigame.api.util;
+package com.minigame.model;
 
 import java.util.Objects;
 
