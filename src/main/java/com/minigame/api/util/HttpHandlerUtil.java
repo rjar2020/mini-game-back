@@ -1,6 +1,7 @@
 package com.minigame.api.util;
 
-import com.minigame.model.Pair;
+import com.minigame.api.dto.HttpResponseDTO;
+import com.minigame.model.util.Pair;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.IOException;
@@ -16,6 +17,10 @@ public final class HttpHandlerUtil {
 
     public static boolean isValidIntId(int id) {
         return id > 0 && id < Integer.MAX_VALUE;
+    }
+
+    public static void sendHttpResponseAndEndExchange(HttpExchange exchange, HttpResponseDTO httpCodeAndBody) {
+        sendHttpResponseAndEndExchange(exchange, httpCodeAndBody.toPair());
     }
 
     public static void sendHttpResponseAndEndExchange(HttpExchange exchange, Pair<Integer, String> httpCodeAndBody) {

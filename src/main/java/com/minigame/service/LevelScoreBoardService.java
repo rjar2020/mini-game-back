@@ -1,6 +1,7 @@
 package com.minigame.service;
 
 import com.minigame.dao.LevelStore;
+import com.minigame.model.UserScore;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,7 +25,7 @@ public class LevelScoreBoardService {
                 .map(integerIntegerMap ->
                         integerIntegerMap
                                 .stream()
-                                .map(entry -> entry.getLeft() + "=" + entry.getRight())
+                                .map(UserScore::toString)
                                 .collect(Collectors.joining(",")));
     }
 

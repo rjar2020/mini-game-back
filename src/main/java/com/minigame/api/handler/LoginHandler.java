@@ -1,7 +1,8 @@
 package com.minigame.api.handler;
 
+import com.minigame.api.dto.HttpResponseDTO;
 import com.minigame.api.util.HttpHandlerUtil;
-import com.minigame.model.Pair;
+import com.minigame.model.util.Pair;
 import com.minigame.service.LoginService;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -25,7 +26,7 @@ public class LoginHandler implements HttpHandler {
         HttpHandlerUtil.sendHttpResponseAndEndExchange(
                 exchange,
                 getUserId(exchange).map(this::createSessionKey)
-                        .orElse(new Pair<>(400, "Invalid userId. Most be a positive integer of 31 bits"))
+                        .orElse(new HttpResponseDTO(400, "Invalid userId. Most be a positive integer of 31 bits").toPair())
         );
     }
 

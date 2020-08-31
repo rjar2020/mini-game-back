@@ -1,7 +1,7 @@
 package com.minigame.service;
 
 import com.minigame.dao.LoginStore;
-import com.minigame.model.Pair;
+import com.minigame.model.util.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;

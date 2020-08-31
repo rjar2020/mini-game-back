@@ -1,6 +1,7 @@
 package com.minigame.dao;
 
-import com.minigame.model.Pair;
+import com.minigame.model.UserScore;
+import com.minigame.model.util.Pair;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -13,7 +14,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 public class LevelStore {
 
     private static final LevelStore LEVEL_STORE = new LevelStore();
-    private static final Map<Integer, ConcurrentSkipListSet<Pair<Integer, Integer>>> MAX_SCORE_BY_LEVEL_STORE = new ConcurrentHashMap<>();
+    private static final Map<Integer, ConcurrentSkipListSet<UserScore>> MAX_SCORE_BY_LEVEL_STORE = new ConcurrentHashMap<>();
     private static final Set<Integer> RECORDED_USERS_BY_LEVEL = new HashSet<>();
 
     private LevelStore() { }
@@ -26,15 +27,15 @@ public class LevelStore {
         if(Objects.isNull(MAX_SCORE_BY_LEVEL_STORE.get(level))) {
             MAX_SCORE_BY_LEVEL_STORE.putIfAbsent(
                     level,
-                    new ConcurrentSkipListSet<>((p1, p2) -> p2.getRight().compareTo(p1.getRight())));
-            MAX_SCORE_BY_LEVEL_STORE.get(level).add(new Pair<>(userId, score));
+                    new ConcurrentSkipListSet<>((firstScore, secondScore) -> secondScore.getScore().compareTo(firstScore.getScore())));
+            MAX_SCORE_BY_LEVEL_STORE.get(level).add(new UserScore(userId, score));
         } else {
             addScoreWithoutUserDuplication(userId, level, score);
         }
         recordUserHasAtLeastOneEntryInScoreBoardForLevel(userId, level);
     }
 
-    public Optional<Set<Pair<Integer, Integer>>> retrieveScoreBoardForLevel(int level) {
+    public Optional<Set<UserScore>> retrieveScoreBoardForLevel(int level) {
         return Optional.ofNullable(MAX_SCORE_BY_LEVEL_STORE.get(level));
     }
 
@@ -46,18 +47,18 @@ public class LevelStore {
         if (isUserAlreadyRecordedInLevel(userId, level)) {
             validateAndKeepMaxScoreForUser(userId, level, score);
         } else {
-            MAX_SCORE_BY_LEVEL_STORE.get(level).add(new Pair<>(userId, score));
+            MAX_SCORE_BY_LEVEL_STORE.get(level).add(new UserScore(userId, score));
         }
     }
 
     private void validateAndKeepMaxScoreForUser(int userId, int level, int score) {
         MAX_SCORE_BY_LEVEL_STORE.get(level)
                 .stream()
-                .filter(oldScore -> userId == oldScore.getLeft() && score > oldScore.getRight())
+                .filter(oldScore -> userId == oldScore.getUserId() && score > oldScore.getScore())
                 .findAny().ifPresent(
                         formerHighScore -> {
                             MAX_SCORE_BY_LEVEL_STORE.get(level).remove(formerHighScore);
-                            MAX_SCORE_BY_LEVEL_STORE.get(level).add(new Pair<>(userId, score));
+                            MAX_SCORE_BY_LEVEL_STORE.get(level).add(new UserScore(userId, score));
                         });
     }
 

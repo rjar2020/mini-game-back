@@ -1,7 +1,7 @@
 package com.minigame.service;
 
 import com.minigame.dao.LoginStore;
-import com.minigame.model.Pair;
+import com.minigame.model.util.Pair;
 
 import java.time.Duration;
 import java.time.Instant;

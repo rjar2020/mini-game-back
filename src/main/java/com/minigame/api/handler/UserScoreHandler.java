@@ -1,7 +1,7 @@
 package com.minigame.api.handler;
 
+import com.minigame.api.dto.HttpResponseDTO;
 import com.minigame.api.util.HttpHandlerUtil;
-import com.minigame.model.Pair;
 import com.minigame.service.LevelScoreBoardService;
 import com.minigame.service.LoginService;
 import com.sun.net.httpserver.HttpExchange;
@@ -27,24 +27,24 @@ public class UserScoreHandler implements HttpHandler {
                 exchange,
                 HttpHandlerUtil.getValidLevelId(exchange)
                         .map(integer -> processUserScoreRequest(exchange, integer))
-                        .orElse(new Pair<>(400, "Invalid levelId. Most be a positive integer of 31 bits"))
+                        .orElse(new HttpResponseDTO(400, "Invalid levelId. Most be a positive integer of 31 bits"))
         );
     }
 
-    private Pair<Integer, String> processUserScoreRequest(HttpExchange exchange, int levelId)  {
+    private HttpResponseDTO processUserScoreRequest(HttpExchange exchange, int levelId)  {
         var sessionId = UUID.fromString(exchange.getRequestURI().getQuery().split("=")[1]);
         return loginService.getUserIfActiveSession(sessionId)
                 .map(userId -> saveNewScore(exchange, levelId, userId))
-                .orElseGet(() -> new Pair<>(400, "Bad Request. Invalid session."));
+                .orElseGet(() -> new HttpResponseDTO(400, "Bad Request. Invalid session."));
     }
 
-    private Pair<Integer, String> saveNewScore(HttpExchange exchange, int levelId, Integer userId) {
+    private HttpResponseDTO saveNewScore(HttpExchange exchange, int levelId, Integer userId) {
         try {
             var score = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
             levelScoreBoardService.saveScore(userId, levelId, Integer.parseInt(score));
-            return new Pair<>(200, "Hello user score");
+            return new HttpResponseDTO(200, "Hello user score");
         } catch (Exception e) {
-            return new Pair<>(400, "Bad Request. Invalid score.");
+            return new HttpResponseDTO(400, "Bad Request. Invalid score.");
         }
     }
 }

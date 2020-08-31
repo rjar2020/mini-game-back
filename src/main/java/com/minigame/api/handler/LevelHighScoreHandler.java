@@ -1,7 +1,7 @@
 package com.minigame.api.handler;
 
+import com.minigame.api.dto.HttpResponseDTO;
 import com.minigame.api.util.HttpHandlerUtil;
-import com.minigame.model.Pair;
 import com.minigame.service.LevelScoreBoardService;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -23,13 +23,13 @@ public class LevelHighScoreHandler implements HttpHandler {
                 exchange,
                 HttpHandlerUtil.getValidLevelId(exchange)
                         .map(getHighScoreForLevelId())
-                        .orElse(new Pair<>(400, "Invalid levelId. Most be a positive integer of 31 bits"))
+                        .orElse(new HttpResponseDTO(400, "Invalid levelId. Most be a positive integer of 31 bits"))
         );
     }
 
-    private Function<Integer, Pair<Integer, String>> getHighScoreForLevelId() {
+    private Function<Integer, HttpResponseDTO> getHighScoreForLevelId() {
         return levelId -> levelScoreBoardService.getHighestScoresForLevel(levelId)
-                .map(scoreResponse -> new Pair<>(200, scoreResponse))
-                .orElse(new Pair<>(404, ""));
+                .map(scoreResponse -> new HttpResponseDTO(200, scoreResponse))
+                .orElse(new HttpResponseDTO(404, ""));
     }
 }

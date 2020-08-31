@@ -1,6 +1,6 @@
 package com.minigame.dao;
 
-import com.minigame.model.Pair;
+import com.minigame.model.util.Pair;
 
 import java.time.Duration;
 import java.time.Instant;
