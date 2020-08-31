@@ -17,7 +17,7 @@ public final class MiniGameServer {
     public static final MiniGameServer SERVER = new MiniGameServer();
     public static final int SERVER_PORT = 8000;
     private HttpServer httpServer;
-    private final AtomicBoolean started = new AtomicBoolean(false);
+    private static final AtomicBoolean started = new AtomicBoolean(false);
 
     private MiniGameServer() {
         httpServer = null;
@@ -34,12 +34,6 @@ public final class MiniGameServer {
             httpServer.createContext("/", exchange -> new RequestHandler().handle(exchange));
             httpServer.setExecutor(Executors.newWorkStealingPool());
             httpServer.start();
-        }
-    }
-
-    public void stop() {
-        if(Objects.nonNull(httpServer) && !started.getAndSet(false)) {
-            httpServer.stop(0);
         }
     }
 }
