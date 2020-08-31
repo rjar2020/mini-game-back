@@ -18,18 +18,17 @@ public class RequestHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) {
         var uri = exchange.getRequestURI().toASCIIString();
-        var httpHandler = getHandlersMap().entrySet()
+        var httpHandlers = getHandlersMap().entrySet()
                 .stream()
                 .filter(isMatchingHandler(exchange, uri))
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toList());
-        if(httpHandler.isEmpty()) {
+        if(httpHandlers.isEmpty()) {
             HttpHandlerUtil.sendHttpResponseAndEndExchange(
                     exchange,
-                    new Pair<>(404, "Resource not found")
-            );
+                    new Pair<>(404, "Resource not found"));
         } else {
-            httpHandler.forEach(handler -> handler.accept(exchange));
+            httpHandlers.forEach(handler -> handler.accept(exchange));
         }
     }
 
@@ -49,10 +48,10 @@ public class RequestHandler implements HttpHandler {
             exchange -> new LoginHandler(new LoginService(LoginStore.getInstance())).handle(exchange);
 
     private final Consumer<HttpExchange> userScoreHandlerProcessor =
-            exchange ->  new UserScoreHandler(
+            exchange -> new UserScoreHandler(
                     new LoginService(LoginStore.getInstance()),
                     new LevelScoreService(LevelStore.getInstance())).handle(exchange);
 
     private final Consumer<HttpExchange> levelHighScoreHandlerProcessor =
-            exchange ->   new LevelHighScoreHandler(new LevelScoreService(LevelStore.getInstance())).handle(exchange);
+            exchange -> new LevelHighScoreHandler(new LevelScoreService(LevelStore.getInstance())).handle(exchange);
 }
