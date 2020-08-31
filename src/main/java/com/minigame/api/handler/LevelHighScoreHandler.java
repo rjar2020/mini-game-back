@@ -1,7 +1,7 @@
 package com.minigame.api.handler;
 
 import com.minigame.api.util.Pair;
-import com.minigame.service.LevelScoreService;
+import com.minigame.service.LevelScoreBoardService;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
@@ -10,10 +10,10 @@ import java.util.function.Function;
 public class LevelHighScoreHandler implements HttpHandler {
 
     public static final String PATH_REGEX = "/-?[0-9]*/highscorelist";
-    private final LevelScoreService levelScoreService;
+    private final LevelScoreBoardService levelScoreBoardService;
 
-    public LevelHighScoreHandler(LevelScoreService levelScoreService) {
-        this.levelScoreService = levelScoreService;
+    public LevelHighScoreHandler(LevelScoreBoardService levelScoreBoardService) {
+        this.levelScoreBoardService = levelScoreBoardService;
     }
 
     @Override
@@ -27,7 +27,7 @@ public class LevelHighScoreHandler implements HttpHandler {
     }
 
     private Function<Integer, Pair<Integer, String>> getHighScoreForLevelId() {
-        return levelId -> levelScoreService.getHighestScoresForLevel(levelId)
+        return levelId -> levelScoreBoardService.getHighestScoresForLevel(levelId)
                 .map(scoreResponse -> new Pair<>(200, scoreResponse))
                 .orElse(new Pair<>(404, ""));
     }

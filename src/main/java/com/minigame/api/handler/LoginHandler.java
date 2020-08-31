@@ -23,8 +23,7 @@ public class LoginHandler implements HttpHandler {
     public void handle(HttpExchange exchange) {
         HttpHandlerUtil.sendHttpResponseAndEndExchange(
                 exchange,
-                getUserId(exchange)
-                        .map(this::createSessionKey)
+                getUserId(exchange).map(this::createSessionKey)
                         .orElse(new Pair<>(400, "Invalid userId. Most be a positive integer of 31 bits"))
         );
     }

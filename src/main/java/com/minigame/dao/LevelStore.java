@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 public class LevelStore {
 
-    private static final int MAX_SCORES_AMOUNT_RECODED_PER_LEVEL = 15;
     private static final LevelStore LEVEL_STORE = new LevelStore();
     private static final Map<Integer, ConcurrentSkipListSet<Pair<Integer, Integer>>> MAX_SCORE_BY_LEVEL_STORE = new ConcurrentHashMap<>();
     private static final Set<Integer> RECORDED_USERS_BY_LEVEL = new HashSet<>();
@@ -32,12 +31,15 @@ public class LevelStore {
         } else {
             addScoreWithoutUserDuplication(userId, level, score);
         }
-        recordUserByLevel(userId, level);
-        shrinkLevelToMaxScoreAmountAllowed(level);
+        recordUserHasAtLeastOneEntryInScoreBoardForLevel(userId, level);
     }
 
-    public Optional<Set<Pair<Integer, Integer>>> retrieveScoresForLevel(int level) {
+    public Optional<Set<Pair<Integer, Integer>>> retrieveScoreBoardForLevel(int level) {
         return Optional.ofNullable(MAX_SCORE_BY_LEVEL_STORE.get(level));
+    }
+
+    public void removeLowestScoreForLevel(int level) {
+        MAX_SCORE_BY_LEVEL_STORE.get(level).remove(MAX_SCORE_BY_LEVEL_STORE.get(level).last());
     }
 
     private void addScoreWithoutUserDuplication(int userId, int level, int score) {
@@ -59,17 +61,11 @@ public class LevelStore {
                         });
     }
 
-    private void recordUserByLevel(int userId, int level) {
+    private void recordUserHasAtLeastOneEntryInScoreBoardForLevel(int userId, int level) {
         RECORDED_USERS_BY_LEVEL.add(new Pair<>(level, userId).hashCode());
     }
 
     private boolean isUserAlreadyRecordedInLevel(int userId, int level) {
         return RECORDED_USERS_BY_LEVEL.contains(new Pair<>(level, userId).hashCode());
-    }
-
-    private void shrinkLevelToMaxScoreAmountAllowed(int level) {
-        if(MAX_SCORE_BY_LEVEL_STORE.get(level).size() > MAX_SCORES_AMOUNT_RECODED_PER_LEVEL) {
-            MAX_SCORE_BY_LEVEL_STORE.get(level).remove(MAX_SCORE_BY_LEVEL_STORE.get(level).last());
-        }
     }
 }

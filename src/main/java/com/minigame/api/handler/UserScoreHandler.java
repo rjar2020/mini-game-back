@@ -1,7 +1,7 @@
 package com.minigame.api.handler;
 
 import com.minigame.api.util.Pair;
-import com.minigame.service.LevelScoreService;
+import com.minigame.service.LevelScoreBoardService;
 import com.minigame.service.LoginService;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -13,11 +13,11 @@ public class UserScoreHandler implements HttpHandler {
 
     public static final String PATH_REGEX = "/-?[0-9]*/score\\?sessionkey\\=([a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8})";
     private final LoginService loginService;
-    private final LevelScoreService levelScoreService;
+    private final LevelScoreBoardService levelScoreBoardService;
 
-    public UserScoreHandler(LoginService loginService, LevelScoreService levelScoreService) {
+    public UserScoreHandler(LoginService loginService, LevelScoreBoardService levelScoreBoardService) {
         this.loginService = loginService;
-        this.levelScoreService = levelScoreService;
+        this.levelScoreBoardService = levelScoreBoardService;
     }
 
     @Override
@@ -33,14 +33,14 @@ public class UserScoreHandler implements HttpHandler {
     private Pair<Integer, String> processUserScoreRequest(HttpExchange exchange, int levelId)  {
         var sessionId = UUID.fromString(exchange.getRequestURI().getQuery().split("=")[1]);
         return loginService.getUserIfActiveSession(sessionId)
-                .map(integer -> saveNewScore(exchange, levelId, integer))
+                .map(userId -> saveNewScore(exchange, levelId, userId))
                 .orElseGet(() -> new Pair<>(400, "Bad Request. Invalid session."));
     }
 
     private Pair<Integer, String> saveNewScore(HttpExchange exchange, int levelId, Integer userId) {
         try {
             var score = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
-            levelScoreService.saveScore(userId, levelId, Integer.parseInt(score));
+            levelScoreBoardService.saveScore(userId, levelId, Integer.parseInt(score));
             return new Pair<>(200, "Hello user score");
         } catch (Exception e) {
             return new Pair<>(400, "Bad Request. Invalid score.");

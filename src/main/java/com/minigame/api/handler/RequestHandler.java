@@ -3,7 +3,7 @@ package com.minigame.api.handler;
 import com.minigame.api.util.Pair;
 import com.minigame.dao.LevelStore;
 import com.minigame.dao.LoginStore;
-import com.minigame.service.LevelScoreService;
+import com.minigame.service.LevelScoreBoardService;
 import com.minigame.service.LoginService;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -50,8 +50,8 @@ public class RequestHandler implements HttpHandler {
     private final Consumer<HttpExchange> userScoreHandlerProcessor =
             exchange -> new UserScoreHandler(
                     new LoginService(LoginStore.getInstance()),
-                    new LevelScoreService(LevelStore.getInstance())).handle(exchange);
+                    new LevelScoreBoardService(LevelStore.getInstance())).handle(exchange);
 
     private final Consumer<HttpExchange> levelHighScoreHandlerProcessor =
-            exchange -> new LevelHighScoreHandler(new LevelScoreService(LevelStore.getInstance())).handle(exchange);
+            exchange -> new LevelHighScoreHandler(new LevelScoreBoardService(LevelStore.getInstance())).handle(exchange);
 }
