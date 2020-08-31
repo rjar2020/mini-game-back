@@ -4,8 +4,10 @@ import com.minigame.model.util.Pair;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.PriorityQueue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -13,6 +15,8 @@ public class LoginStore {
 
     private static final LoginStore LOGIN_STORE = new LoginStore();
     private static final Map<UUID, Pair<Integer, Instant>> SESSION_STORE = new ConcurrentHashMap<>();
+    private static final PriorityQueue<Pair<UUID, Instant>> SESSION_CLEANUP_QUEUE =
+            new PriorityQueue<>(Comparator.comparing(Pair::getRight));
 
     private LoginStore() { }
 
