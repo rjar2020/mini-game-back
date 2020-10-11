@@ -29,3 +29,9 @@ Use ***Control + c*** to stop the server after any of the bellow options.
 - Import the source as a Gradle project
 
 - com.minigame.MiniGameBootstrap can be run/debug 
+
+## Notes about the code review
+Modeling the stores as a singleton and with static collections because:
+- This is a test, so it's the most straight forward way to simulate a persistence layer. Other option could be an in-memory DB.
+- I consider an static structure is good enough for a test like this, as I don't think is a good idea to mock a java collection, as the behaviour is well-known, tests will be less complex and with less boilerplate code.
+- The methods defined in the DAO classes are already abstractions of the persistence layer. Changing the implementation details of the dao, including DB or supporting data structures, doesn't imply a change in the behaviour.
